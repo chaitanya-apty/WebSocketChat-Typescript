@@ -1,0 +1,169 @@
+<html>
+
+<head>
+    <title>Socket.IO chat</title>
+    <style>
+        body {
+            margin: 0;
+            padding-bottom: 3rem;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        #form {
+            background: rgba(0, 0, 0, 0.15);
+            padding: 0.25rem;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            height: 3rem;
+            box-sizing: border-box;
+            backdrop-filter: blur(10px);
+        }
+
+        #input {
+            border: none;
+            padding: 0 1rem;
+            flex-grow: 1;
+            border-radius: 2rem;
+            margin: 0.25rem;
+        }
+
+        #input:focus {
+            outline: none;
+        }
+
+        #form>button {
+            background: #333;
+            border: none;
+            padding: 0 1rem;
+            margin: 0.25rem;
+            border-radius: 3px;
+            outline: none;
+            color: #fff;
+        }
+
+        #messages {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        #messages>li {
+            display: block;
+            border: 2px solid black;
+            border-radius: 0.8em;
+            padding: 10px;
+            margin: 0.3%;
+            font-size: 1em;
+            width: fit-content;
+            clear: both;
+        }
+
+        #messages>li[is_current="true"] {
+            background: #34B7F1;
+            float: right;
+            border-bottom-right-radius: 0px;
+        }
+
+        #messages>li[is_current="false"] {
+            float: left;
+            border-bottom-left-radius: 0px;
+        }
+
+        #messages>li>sub {
+            padding-left: 5px;
+            opacity: 0.5;
+            font-size: 50%;
+        }
+        #userName {
+            font-size: 7px;
+            opacity: 0.6;
+            text-align: end;
+        }
+    </style>
+    <script src="https://cdn.socket.io/3.1.3/socket.io.min.js"
+        integrity="sha384-cPwlPLvBTa3sKAgddT6krw0cJat7egBga3DJepJyrLl4Q9/5WLra3rrnMcyTyOnh"
+        crossorigin="anonymous"></script>
+    <script>
+        function getTimeStamp(appendTo) {
+            sub = document.createElement('sub');
+            var d = new Date();
+            sub.innerText = `${d.getHours()}:${d.getMinutes()}`;
+            appendTo.appendChild(sub);
+            return appendTo;
+        }
+        function getUserNameEmbed(appendTo, userName) {
+            ele = document.createElement('div');
+            ele.id = "userName"
+            ele.innerText = `${userName}`;
+            appendTo.prepend(ele);
+            return appendTo;
+        }
+        let socketID;
+        let userName = sessionStorage.getItem('userName');
+        if (!userName) {
+            userName = prompt("Enter your name to Join?");
+            while (userName.length == 0 || userName == "null") {
+                userName = prompt("Enter your name to Join?");
+            }
+            sessionStorage.setItem('userName', userName);
+        }
+
+        const socket = io('ws://localhost:8080/chat', {
+            secure: true,
+            query: {
+                userName
+            }
+        });
+        socket.on('chat', (payload) => {
+            var messages = document.getElementById('messages');
+            var item = document.createElement('li');
+            item.setAttribute('is_current', payload.id === socket.id)
+            item.textContent = payload.msg;
+            item = getTimeStamp(item);
+            item = getUserNameEmbed(item, payload.userName);
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        });
+        socket.on('disconnect', () => {
+            const userStatus = document.getElementById('user_status');
+            userStatus.innerText = "You're Disconnected";
+            userStatus.style.display = 'block';
+            setTimeout(() => {
+                userStatus.style.display = 'none';
+            }, 1500);
+        });
+        socket.on('user_status', (payload) => {
+            const userStatus = document.getElementById('user_status');
+            userStatus.innerText = payload.msg;
+            userStatus.style.display = 'block';
+            setTimeout(() => {
+                userStatus.style.display = 'none';
+            }, 1500);
+        });
+    </script>
+</head>
+
+<body>
+    <ul id="messages"></ul>
+    <h6 id="user_status" style="position: absolute;bottom: 7%;color: green;"></h6>
+    <form id="form" action="" onsubmit="return false">
+        <input id="input" autocomplete="off" /><button>Send</button>
+    </form>
+</body>
+<script>
+    var form = document.getElementById('form');
+    var input = document.getElementById('input');
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (input.value) {
+            socket.emit('chat', input.value);
+            input.value = '';
+        }
+    });
+</script>
+
+</html>
