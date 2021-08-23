@@ -20,7 +20,7 @@ Development Mode
 ```
 
 ## App Preview
-![alt text](https://ibb.co/0nC8cB6g)
+![App Preview](https://i.imgur.com/1PmSJow.png)
 
 
 ### Lint Checks
