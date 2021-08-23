@@ -20,6 +20,7 @@ Development Mode
 ```
 
 ## App Preview
+### Side by Side preview with User Names and timestamp
 ![App Preview](https://i.imgur.com/1PmSJow.png)
 
 
